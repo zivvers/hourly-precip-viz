@@ -1,0 +1,17 @@
+load:
+  build: py/.
+  ports:
+    - "5000:5000"
+  volumes:
+    - /home/ubuntu/precipViz/docker-locker/py/work:/work
+  links:
+    - db
+  stdin_open: true
+  tty: true
+  command: python load_data.py 2012
+
+
+db:
+  image: mongo:3.0.2
+  volumes:
+    - /home/ubuntu/precipViz/db:/data/db
