@@ -8,25 +8,25 @@ from ftplib import FTP
 
 def create_station_dict():
 
-    with open('emshr_lite.txt', 'r') as j:
+    req = requests.get('http://www.ncdc.noaa.gov/homr/file/emshr_lite.txt')
 
-        station_dict = {}
+    station_dict = {}
 
-        lines = j.read().split('\n')
-		
-        for line in lines:
+    lines = req.text.split('\n')
+            
+    for line in lines:
 
-            coop = line[27:33].strip() #coop station ID
-            station_name = line[86:186].strip()
-            country_name = line[190:225].strip()
-            utc_offset = line[268:271].strip()
-            lat = line[272:281].strip()
-            lon = line[282:292].strip()
+        coop = line[27:33].strip() #coop station ID
+        station_name = line[86:186].strip()
+        country_name = line[190:225].strip()
+        utc_offset = line[268:271].strip()
+        lat = line[272:281].strip()
+        lon = line[282:292].strip()
 
-            station_dict[coop] = {'lat':lat, 'lon':lon, 'station_name': station_name
-                                    , 'country_name': country_name, 'utc_offset': utc_offset}
+        station_dict[coop] = {'lat':lat, 'lon':lon, 'station_name': station_name
+                                , 'country_name': country_name, 'utc_offset': utc_offset}
 
-        return station_dict
+    return station_dict
 
 def pull_precip_data(precip_file, station_dict):
 
