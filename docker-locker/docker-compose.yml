@@ -1,3 +1,9 @@
+db:
+  image: mongo:latest
+  volumes:
+    - /home/ubuntu/precipViz/db:/data/db
+  command: --smallfiles
+
 load:
   build: py/.
   ports:
@@ -9,9 +15,7 @@ load:
   stdin_open: true
   tty: true
   command: python load_data.py 2012
+  #command: ipython
+  #entrypoint: /bin/sh
 
 
-db:
-  image: mongo:3.0.2
-  volumes:
-    - /home/ubuntu/precipViz/db:/data/db

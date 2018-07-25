@@ -5,6 +5,7 @@ import os
 import pytz
 from pymongo import MongoClient
 from ftplib import FTP
+import requests
 
 def create_station_dict():
 

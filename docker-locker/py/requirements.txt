@@ -1,3 +1,4 @@
 pymongo
 ipython
 pytz
+requests
