@@ -14,8 +14,8 @@ load:
     - db
   stdin_open: true
   tty: true
-  command: python load_data.py 2012
-  #command: ipython
-  #entrypoint: /bin/sh
+  #command: python load_data.py 2012
+  command: tail -f /dev/null 
+  entrypoint: sh -c
 
 
