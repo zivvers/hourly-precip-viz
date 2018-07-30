@@ -71,11 +71,12 @@ def pull_precip_data(precip_file, station_dict):
                 datetime_local = datetime.strptime(datetime_str, frmt)
                 datetime_utc = datetime_local.astimezone(pytz.utc)
 
+                # mongodb converts everything to UTC so no use putting datetime_local in :-(
                 dat.append({
                     'coop': coop
                     , 'station_name': station_dat['station_name']
                     , 'country_name': station_dat['country_name']
-                    , 'datetime_local': datetime_local
+                    , 'utc_offset': utc_offset
                     , 'datetime_utc': datetime_utc
                     , 'lat': station_dat['lat']
                     , 'lon': station_dat['lon']

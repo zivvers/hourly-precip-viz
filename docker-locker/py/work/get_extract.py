@@ -9,8 +9,8 @@ def main():
                     27017)
     db = client['hourly_precip']
     coll = db['posts']
-
-
+    res = coll.find({})
+    
 
 if __name__ == "__main__":
     main()

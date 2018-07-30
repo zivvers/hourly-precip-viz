@@ -2,14 +2,18 @@
 const fs = require('fs');
 const express = require('express');
 const jsdom = require('jsdom');
+const topojson = require('topojson');
 const d3 = require('d3');
+const d3_composite = require("d3-composite-projections");
+const d3_geo = require("d3-geo");
+
 const PORT = 8080;
 const HOST = '0.0.0.0';
 
 // App
 const app = express();
 
-app.get('/', function(req, res) {
+var html;
 
     // virtual DOM
     jsdom.env({
@@ -18,19 +22,53 @@ app.get('/', function(req, res) {
         done: function(errors, window) {
         window.d3 = d3.select(window.document);
 
+        var width = 950,
+            height = 550;
+        
+        var projection = d3_composite.geoAlbersUsaTerritories();
+
+        var path = d3.geoPath().projection(projection);
+
         var svg = window.d3.select('body')
-                    .append('div')
-                      .attr('class', 'feast')
-                    .append('svg')
-                    .append('g')
-                    .append('text')
-                    .attr('x', '100')
-                    .attr('y', '100')
-                    .text('NOW WE ARE COOKING');
-        console.log(window.d3.select('.feast').html());
-        res.send(window.d3.select('.feast').html());
+                      .append('div')
+                        .attr('class', 'testVG')  
+                      .append('svg')
+                      .attr('width', width)
+                      .attr('height', height);
+        //d3.json("states_2017_topo.json", function(error, topo) {
+
+        var contents = fs.readFileSync("states_2017_topo.json");
+        var topo = JSON.parse(contents);
+
+            var states = topojson.feature(topo, topo.objects.states_2017).features;
+    
+            svg.selectAll("path")
+                     .data(states).enter()
+                     .append("path")
+                     .attr("class", "feature")
+                     .style("fill", "steelblue")
+                     .attr("d", path);
+    
+
+              svg.append("path")
+                    .datum(topojson.mesh(topo, topo.objects.states_2017, function(a, b) { return a !== b; }))
+                    .attr("class", "mesh")
+                    .attr("d", path);
+                                
+        //});                  
+        
+        //console.log(window.d3.select('.testVG').html());
+        //res.send(window.d3.select('.testVG').html());
+        html = window.d3.select('.testVG').html();
         }
     });
+
+
+
+
+app.get('/', function(req, res) {
+
+    res.send( html );
 
 });
 
