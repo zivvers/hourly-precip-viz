@@ -15,9 +15,12 @@ const app = express();
 
 var html;
 
+ var html = fs.readFileSync("template.html", "utf8");
+ console.log(html);
+
     // virtual DOM
     jsdom.env({
-        html: '',
+        html: html,
         features: { QuerySelector: true },
         done: function(errors, window) {
         window.d3 = d3.select(window.document);
@@ -31,7 +34,6 @@ var html;
 
         var svg = window.d3.select('body')
                       .append('div')
-                        .attr('class', 'testVG')  
                       .append('svg')
                       .attr('width', width)
                       .attr('height', height);
@@ -59,7 +61,7 @@ var html;
         
         //console.log(window.d3.select('.testVG').html());
         //res.send(window.d3.select('.testVG').html());
-        html = window.d3.select('.testVG').html();
+        html = window.d3.select('.test').html();
         }
     });
 
