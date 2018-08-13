@@ -15,58 +15,83 @@ const app = express();
 
 var html;
 
- var html = fs.readFileSync("template.html", "utf8");
- console.log(html);
+var tempHTML = fs.readFileSync("template.html", "utf8");
+console.log(html);
 
-    // virtual DOM
-    jsdom.env({
-        html: html,
-        features: { QuerySelector: true },
-        done: function(errors, window) {
-        window.d3 = d3.select(window.document);
+// virtual DOM
+jsdom.env({
+    html: tempHTML,
+    features: { QuerySelector: true },
+    done: function(errors, window) {
+    window.d3 = d3.select(window.document);
 
-        var width = 950,
-            height = 550;
+    var width = 950,
+        height = 550;
+    
+    var projection = d3_composite.geoAlbersUsaTerritories();
+
+    var path = d3.geoPath().projection(projection);
+
+    var margin = {top: 20, right: 30, bottom: 30, left: 40};
+
+    var svg = window.d3.select('body')
+                  .append('div')
+                    .attr('top', margin.top) // these attr don't change anything
+                    .attr('right', margin.right)
+                    .attr('left', margin.left)
+                    .attr('bottom', margin.bottom)
+                  .append('svg')
+                  .attr('width', width + margin.right + margin.left)
+                  .attr('height', height + margin.top + margin.bottom);
+
+    var g = svg.append("g")
+                .attr("transform", "translate(" + margin.left + ", " + margin.top + ")");
+
+    fs.readFile("states_2017_topo.json", function(err, dat) { 
         
-        var projection = d3_composite.geoAlbersUsaTerritories();
+        var topo = JSON.parse( dat );
 
-        var path = d3.geoPath().projection(projection);
+        var states = topojson.feature(topo, topo.objects.states_2017).features;
 
-        var svg = window.d3.select('body')
-                      .append('div')
-                      .append('svg')
-                      .attr('width', width)
-                      .attr('height', height);
-        //d3.json("states_2017_topo.json", function(error, topo) {
+        var voronoi = d3.voronoi()
+            .x(function(d) { return projection([ +d.lon, +d.lat ] )[0]; })
+            .y(function(d) { return projection([ +d.lon, +d.lat ] )[1]; })
+            .extent([[0, 0], [width, height]])
 
-        var contents = fs.readFileSync("states_2017_topo.json");
-        var topo = JSON.parse(contents);
+        var vG = svg.append("g");
 
-            var states = topojson.feature(topo, topo.objects.states_2017).features;
-    
-            svg.selectAll("path")
-                     .data(states).enter()
-                     .append("path")
-                     .attr("class", "feature")
-                     .style("fill", "steelblue")
-                     .attr("d", path);
-    
+        svg.selectAll("path")
+                 .data(states).enter()
+                 .append("path")
+                 .attr("class", "feature")
+                 .style("fill", "none")
+                 .attr("d", path);
 
-              svg.append("path")
-                    .datum(topojson.mesh(topo, topo.objects.states_2017, function(a, b) { return a !== b; }))
+        d3.csv('precip_extract.csv', function(error, data) {
+
+            if (error) { 
+                console.log('CANNOT OPEN PRECIP EXTRACT');
+            }
+            else {
+
+                svg.append("path")
+                    .datum(topojson.mesh(topo, topo.objects.states_2017, function(a, b) { return a === b; }))
                     .attr("class", "mesh")
                     .attr("d", path);
-                                
-        //});                  
-        
-        //console.log(window.d3.select('.testVG').html());
-        //res.send(window.d3.select('.testVG').html());
-        html = window.d3.select('.test').html();
-        }
-    });
+
+                vG.selectAll("path")
+                    .data(voronoi.polygons( data ))
+                    .enter().append("path")
+                        .attr("d", function(d) { return d ? "M" + d.join("L") + "Z" : null; });
+                        .attr("station_name", function(d) { return  
 
 
-
+                html = window.d3.select('.test').html();    
+           }
+        });
+      });                  
+    }
+});
 
 app.get('/', function(req, res) {
 
