@@ -1,4 +1,4 @@
-FROM node:6
+FROM node:9
 
 # use changes to package.json to force Docker not to use the cache
 # when we change our application's nodejs dependencies:
@@ -13,4 +13,4 @@ ADD . /opt/app
 
 EXPOSE 3000
 
-CMD ["node", "server.js"]
+#CMD ["node", "server.js"]

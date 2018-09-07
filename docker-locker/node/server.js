@@ -6,6 +6,8 @@ const topojson = require('topojson');
 const d3 = require('d3');
 const d3_composite = require("d3-composite-projections");
 const d3_geo = require("d3-geo");
+const MongoClient = require('mongodb').MongoClient;
+const { JSDOM } = jsdom;
 
 const PORT = 8080;
 const HOST = '0.0.0.0';
@@ -19,11 +21,10 @@ var tempHTML = fs.readFileSync("template.html", "utf8");
 console.log(html);
 
 // virtual DOM
-jsdom.env({
-    html: tempHTML,
-    features: { QuerySelector: true },
-    done: function(errors, window) {
-    window.d3 = d3.select(window.document);
+    const { document } = (new JSDOM(tempHTML)).window;
+
+    let window = d3.select(window.document)
+                    .attr('class', 'test');
 
     var width = 950,
         height = 550;
@@ -34,7 +35,7 @@ jsdom.env({
 
     var margin = {top: 20, right: 30, bottom: 30, left: 40};
 
-    var svg = window.d3.select('body')
+    var svg = window.select('body')
                   .append('div')
                     .attr('top', margin.top) // these attr don't change anything
                     .attr('right', margin.right)
@@ -83,15 +84,13 @@ jsdom.env({
                     .data(voronoi.polygons( data ))
                     .enter().append("path")
                         .attr("d", function(d) { return d ? "M" + d.join("L") + "Z" : null; });
-                        .attr("station_name", function(d) { return  
+                        //.attr("station_name", function(d) { return  
 
 
-                html = window.d3.select('.test').html();    
+                html = window.select('.test').html();    
            }
         });
       });                  
-    }
-});
 
 app.get('/', function(req, res) {
 

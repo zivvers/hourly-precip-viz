@@ -3,7 +3,8 @@ db:
   volumes:
     - /home/ubuntu/precipViz/db:/data/db
   command: --smallfiles
-
+  ports:
+    - "27017:27017"
 load:
   build: py/.
   ports:
@@ -18,4 +19,13 @@ load:
   command: tail -f /dev/null 
   entrypoint: sh -c
 
+node:
+  build: node/.
+  ports:
+    - "8888:8888"
+  links:
+    - db
+  command:
+      tail -f /dev/null
+      #node mongo_tools.js
 
