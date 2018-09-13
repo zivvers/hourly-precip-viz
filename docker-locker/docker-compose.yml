@@ -26,6 +26,6 @@ node:
   links:
     - db
   command:
-      tail -f /dev/null
+      #tail -f /dev/null
       #node mongo_tools.js
-
+      node server.js
