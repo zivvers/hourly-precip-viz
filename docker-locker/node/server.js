@@ -1,25 +1,21 @@
 'use strict';
 const fs = require('fs');
-const express = require('express');
+const app = require('express')();
 const jsdom = require('jsdom');
 const topojson = require('topojson');
 const d3 = require('d3');
 const d3_composite = require("d3-composite-projections");
 const d3_geo = require("d3-geo");
 const mongoose = require('mongoose');
+const http = require('http').Server(app);
+const io = require('socket.io')(http);
 
-let url = "mongodb://db/hourly_precip";
+let dbURL = "mongodb://db/hourly_precip";
 
 const PORT = 8080;
 const HOST = '0.0.0.0';
 
-// App
-const app = express();
-
-var html;
-
 var tempHTML = fs.readFileSync("template.html", "utf8");
-console.log(html);
 
     function connectMongo(  ) {
         mongoose.connect("mongodb://db/hourly_precip");
@@ -43,14 +39,29 @@ console.log(html);
 
     }
 
-    connectMongo();
+    //connectMongo();
 
-/* app.get('/', function(req, res) {
+app.get('/', function(req, res) {
 
-    res.send( html );
+    res.send( tempHTML );
+    //var startDateTime = req.query.start;
+    //var endDateTime = req.query.start;
 
-}); */
+});
+app.get('/date', function(req, res) {
 
+    var startDateTime = req.query.start;
+    var endDateTime = req.query.end;
+
+    console.log(startDateTime);
+    console.log(endDateTime);
+});
+process.on('SIGINT', function() {
+        process.exit();
+});
 
 /*app.listen(PORT, HOST);
-console.log(`Running on http://${HOST}:${PORT}`);*/
+console.log(`Running on http:${HOST}:${PORT}`);*/
+http.listen(PORT, function(){
+      console.log(`listening on http:${HOST}:${PORT}`);
+});
