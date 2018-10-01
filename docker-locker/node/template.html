@@ -7,7 +7,7 @@
         <script src="http://d3js.org/d3.v4.min.js"></script>
         <script src="http://d3js.org/topojson.v2.min.js"></script>
         <script src="https://unpkg.com/d3-composite-projections@1.2.0"></script>
-
+        <script src="/socket.io/socket.io.js"></script>
         <style type="text/css">
 
             #wrapper {
@@ -23,9 +23,11 @@
 
             .input-container {
                 display: inline-block;
-                vertical-align: bottom;
-                margin-right: 30px;
-                margin-left: 30px;
+                vertical-align: top;
+                margin-right: 10px;
+                margin-left: 10px;
+                width: 200px;
+                height: 100px;
             }
 
              .mesh {
@@ -56,7 +58,10 @@
             <span><p></span>
         </div>
         <div class="input-container">
+            <br>
             <button type="button">Submit</button>
+            <br>
+            <span><p></span>
         </div>
     </div>
     <div id="svg-container">
@@ -64,40 +69,97 @@
 </div>
 <script type="text/javascript">
 
+
+    var socket = io();
+
     // minimum date is 2012-01-01
     var minDate = new Date(2012, 00, 01);
     // maximum date is 2014-12-31
     var maxDate = new Date(2015, 00, 00);
 
-    d3.selectAll('#date-input')
+    d3.selectAll('.input-container')
             .select('input')
             .on('input', function() { console.log('inputted'); 
                                                valiDate( this );} );
     
-    /* <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M20.285 2l-11.285 11.567-5.286-5.011-3.714 3.716 9 8.728 15-15.285z"/></svg>*/
+    d3.select("button")
+        .on("click", function() { console.log("clicked");
+                                    submitDates( this );} );
+        
+            /* <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M20.285 2l-11.285 11.567-5.286-5.011-3.714 3.716 9 8.728 15-15.285z"/></svg>*/
 
+
+    function submitDates( elem ) {
+
+        var startInput = d3.select("input#start-date"),
+            endInput = d3.select("input#end-date");
+
+        var infoText = "";
+        var spanCol = "black";
+
+        if ((startInput.attr("class") != "valid") || (endInput.attr("class") != "valid")) {
+    
+            infoText = "Invalid date(s) inputted";
+            spanCol = "red";    
+
+         }
+             d3.select(elem)
+                        .select("p")
+                        .transition()
+                        .duration(1000)
+                        .on("start", function () {
+                            var t = d3.active(this)
+                                .style("opacity", 0)
+                                ;
+                            
+                            d3.select(this)
+                                .style("opacity", 0)
+                                .text(infoText)
+                                .transition(t)
+                                .style("opacity", 1)
+                                .style("color", spanCol);
+                            
+
+                            });
+    }        
+        
+        
+        
+        
+        
     function valiDate(elem) {
     
         var input = d3.select(elem).property("value");
+
+        console.log( input );
         var inputDateSplit = input.split("-");
         var inputDate = new Date(+inputDateSplit[0], +inputDateSplit[1] - 1,  +inputDateSplit[2], 0, 0);
-
+        console.log(inputDate);
         var infoText;        
-        var spanClass;
+        var inputClass = "invalid";
         
         if ((inputDate < minDate) || (inputDate > maxDate)) {
 
             console.log("date not in range!");
-            infoText = "Date not in range of " + minDate.toLocaleString("en-US") + " to " + maxDate.toLocaleString("en-US");
+            infoText = "Date not in range of " + minDate.toLocaleDateString("en-US") + " to " + maxDate.toLocaleDateString("en-US");
             spanCol = "red";
-        } else {
+        
+        } else if (input != "") {
 
             infoText = "Valid date";
             spanCol = "green";
+            inputClass = "valid";
+        }
+        // if empty string input value
+        else {
+
+            infoText = " ";
+            spanCol = "black";
+        
         }
             // .toLocaleDateString("en-US")
             d3.select(elem.parentNode)
-                        .select("span")
+                        .select("p")
                         .transition()
                         .duration(1000)
                         .on("start", function () {
@@ -111,8 +173,10 @@
                                 .text(infoText)
                                 .transition(t)
                                 .style("opacity", 1)
-                                .style("color", spanCol)
-                                .attr("class", spanClass);
+                                .style("color", spanCol);
+                            
+                            d3.select( elem )
+                                .attr("class", inputClass);
                         });
        
     }

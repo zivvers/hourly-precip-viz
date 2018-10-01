@@ -22,7 +22,7 @@ load:
 node:
   build: node/.
   ports:
-    - "8888:8888"
+    - "8080:8080"
   links:
     - db
   command:
