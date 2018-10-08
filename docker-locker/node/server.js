@@ -33,7 +33,8 @@ function createMap ( template ) {
                         .attr("height", 1000),
               
             g = svg.append("g")
-                    .attr("transform", "translate(" + 100 + "," + 30 + ")");
+                .attr("id", "mapG")
+                .attr("transform", "translate(" + 100 + "," + 30 + ")");
 
 
         console.log( dom.serialize() ) ;
@@ -51,6 +52,7 @@ function createMap ( template ) {
 
             }    
             else {
+
                 var topoJSON = JSON.parse(topo);
                 
                 var states = topojson.feature(topoJSON, topoJSON.objects.states_2017).features;
@@ -70,7 +72,7 @@ function createMap ( template ) {
 }
 
 
-    function connectMongo(  ) {
+/*    function connectMongo(  ) {
         
         mongoose.connect( dbURL );
         var db = mongoose.connection;
@@ -91,8 +93,9 @@ function createMap ( template ) {
         posts.findOne().then(doc => console.log(doc));
         //return posts;
 
-    }
+    } */
 
+// do we need this?
 app.get('/date', function(req, res) {
 
     var startDateTime = req.query.start;
@@ -105,13 +108,60 @@ process.on('SIGINT', function() {
         process.exit();
 });
 
-/*app.listen(PORT, HOST);
-console.log(`Running on http:${HOST}:${PORT}`);*/
+async function streamDat( dateJSON ) {
+
+    console.log(dateJSON.start);
+    console.log(dateJSON.end);
+    var startDateSplit = dateJSON.start.split("-"),
+        endDateSplit = dateJSON.end.split("-");
+    var startDate = new Date(+startDateSplit[0], +startDateSplit[1] - 1,  +startDateSplit[2], 0, 0),
+        endDate = new Date(+endDateSplit[0], +endDateSplit[1] - 1, +endDateSplit[2], 23, 0);
+
+    mongoose.connect( dbURL );
+    var db = mongoose.connection;
+
+    let precipSchema = new mongoose.Schema({
+        coop: String
+        , station_name: String
+        , country_name: String
+        , utc_offset: String
+        , datetime_utc: Date
+        , lat: Number
+        , lon: Number
+        , precip_amt: Number
+       }, { collection : 'posts'} );
+
+    let posts = mongoose.model('posts', precipSchema); 
+
+    var iterDate = startDate;
+
+    while ( iterDate <= endDate ) {
+        console.log( iterDate );
+        var currDat = await posts.findOne({datetime_utc : iterDate}) ;
+        console.log( currDat);
+        io.emit("streamData", currDat);
+        // add one hour!
+        iterDate.setTime(iterDate.getTime() + (60*60*1000));
+   }
+
+
+}
+
+
+
 async function runApp() {
 
     var tempHTML = fs.readFileSync("template.html", "utf8");
 
     var html = await createMap(tempHTML);
+
+    io.on('connection', function(socket){
+        console.log('a user connected');
+            socket.on('date submit', function(json){
+                  streamDat( json );
+            });
+    });
+
 
     http.listen(PORT, function(){
         console.log(`listening on http:${HOST}:${PORT}`);
@@ -124,7 +174,6 @@ async function runApp() {
         res.send( html );
 
     });
-
 }
 
 runApp();

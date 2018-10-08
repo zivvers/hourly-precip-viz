@@ -19,7 +19,7 @@ load:
   command: tail -f /dev/null 
   entrypoint: sh -c
 
-node:
+node_server:
   build: node/.
   ports:
     - "8080:8080"
