@@ -30,16 +30,17 @@ function createMap ( template ) {
             svg = page.select("#svg-container")
                       .append("svg")
                         .attr("width", 1250)
-                        .attr("height", 1000),
+                        .attr("height", 1000);
               
-            g = svg.append("g")
-                .attr("id", "mapG")
-                .attr("transform", "translate(" + 100 + "," + 30 + ")");
+        var g = svg.append("g")
+                .attr("id", "mapG");
+                //.attr("transform", "translate(" + 100 + "," + 30 + ")");
 
 
-        console.log( dom.serialize() ) ;
+        //console.log( dom.serialize() ) ;
         var projection = d3_composite.geoAlbersUsaTerritories()
-                            .scale( 1150 ); 
+                            .scale( 1150 ) 
+                            .translate([550, 275]); 
 
         var path = d3.geoPath()
             .projection(projection);        
@@ -49,7 +50,6 @@ function createMap ( template ) {
             if (err) {
             
                 return reject( err );
-
             }    
             else {
 
@@ -137,7 +137,7 @@ async function streamDat( dateJSON ) {
 
     while ( iterDate <= endDate ) {
         console.log( iterDate );
-        var currDat = await posts.findOne({datetime_utc : iterDate}) ;
+        var currDat = await posts.find({datetime_utc : iterDate}) ;
         console.log( currDat);
         io.emit("streamData", currDat);
         // add one hour!

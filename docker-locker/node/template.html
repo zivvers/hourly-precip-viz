@@ -69,16 +69,108 @@
 <script type="text/javascript">
 
     // unfortunately have to copy projection/path code from our server side rendering
-    var projection = d3_composite.geoAlbersUsaTerritories()
-                        .scale( 1150 ); 
+    var projection = d3.geoAlbersUsaTerritories()
+                        .scale( 1150 )
+                        .translate([550, 275]); 
 
     var path = d3.geoPath()
         .projection(projection);        
 
+    var width = d3.select("svg").attr("width")
+        , height = d3.select("svg").attr("height");
 
+    var voronoi = d3.voronoi()
+        .x( function(d) { return +d.coords[0]; } )
+        .y( function(d) { return +d.coords[1]; } )
+        .extent([   [-1, -1],
+                    [width + 1, height + 1]
+                            ]);
+
+    // we rendered this server side
+    var g = d3.select("g");
+
+
+    var colorScale = d3.scaleLinear()
+                    .range(["#27D32F","#FFFF00", "#FFA500", "#D73027", "#9400D3"])
+                    .interpolate( d3.interpolateHcl );
+
+    // render voronoi polygons for each json object streamed from server
     function renderPrecipDat( data ) {    
+        
+        console.log(data);
+        var precipDat = [];
+
+        data.forEach( function(d) {
+            precipDat.push(
+                {   coop : d.coop
+                    , datetime_utc : d.datetime_utc
+                    , coords : projection([+d.lon, +d.lat])
+                    , precip_amt : +d.precip_amt
+                    , station_name : d.station_name
+                }
+
+            );
+        });
+
 
         console.log(data);
+        
+        var t = d3.transition()
+            .duration(750);
+        
+        // JOIN
+        var voronoiGroup = g.selectAll(".voronoi")  
+                            .data( voronoi.polygons( precipDat ));
+
+        var stations = g.selectAll(".station")
+                        .data( precipDat );
+
+        // EXIT
+        voronoiGroup.exit()
+            .style("fill", "gainsboro")
+            .transition(t)
+            .style("opacity", 1e-6)
+            .remove();
+
+        stations.exit()
+            .transition(t)
+            .style("opacity", 1e-6)
+            .remove();
+
+        // UPDATE
+        voronoiGroup
+            .transition(t)
+            .delay(250)
+            .attr("d", function(d) { return d ? "M" + d.join("L") + "Z" : null; } )
+            .style("fill", "#C0C0C0");
+      
+       stations
+            .transition(t)
+            .delay(250)
+            .attr("cx", function(d) { return d.coords[0]; })
+            .attr("cy", function(d) { return d.coords[1]; })
+            .attr("r", 2)
+            .attr("stroke", "black");
+
+        // ENTER
+        voronoiGroup.enter().append("path")
+            .attr("class", "voronoi")
+            .attr("d", function(d) { return d ? "M" + d.join("L") + "Z" : null; })
+            //.style("fill", function(d) { return "blue"; })
+            .style("fill", "blue")
+            .style("opacity", 1e-6)
+          .transition(t)
+            .delay(250)
+            .style("opacity", 1);
+        
+        stations.enter().append("circle")
+            .attr("class", "station")
+            .attr("cx", function(d) {  return d.coords[0]; })
+            .attr("cy", function(d) {  return d.coords[1]; })
+              .style("opacity", 1e-6)
+            .transition(t)
+              .delay(250)
+              .style("opacity", 1);
     }
 
     var socket = io();
