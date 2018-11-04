@@ -135,14 +135,24 @@ async function streamDat( dateJSON ) {
 
     var iterDate = startDate;
 
-    while ( iterDate <= endDate ) {
-        console.log( iterDate );
-        var currDat = await posts.find({datetime_utc : iterDate}) ;
-        console.log( currDat);
-        io.emit("streamData", currDat);
-        // add one hour!
-        iterDate.setTime(iterDate.getTime() + (60*60*1000));
-   }
+    
+    var interval =  setInterval( sendDat, 1000);
+            
+    async function sendDat() {
+                console.log( iterDate );
+                var currDat = await posts.find({datetime_utc : iterDate}) ;
+                console.log( currDat);
+                io.emit("streamData", currDat);
+                // add one hour!
+                iterDate.setTime(iterDate.getTime() + (60*60*1000));
+                if (iterDate == endDate) {
+                    clearInterval( interval );
+                }
+        }
+    }
+
+
+
 
 
 }
@@ -158,7 +168,8 @@ async function runApp() {
     io.on('connection', function(socket){
         console.log('a user connected');
             socket.on('date submit', function(json){
-                  streamDat( json );
+                console.log('streaming');
+                streamDat( json );
             });
     });
 

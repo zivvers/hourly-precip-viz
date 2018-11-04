@@ -25,7 +25,9 @@ node_server:
     - "8080:8080"
   links:
     - db
+  stdin_open: true
+  tty: true
   command:
-      #tail -f /dev/null
+      tail -f /dev/null
       #node mongo_tools.js
-      node server.js
+      #node server.js
