@@ -28,6 +28,6 @@ node_server:
   stdin_open: true
   tty: true
   command:
-      tail -f /dev/null
+      #tail -f /dev/null
       #node mongo_tools.js
-      #node server.js
+      node server.js

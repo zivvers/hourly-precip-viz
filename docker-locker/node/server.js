@@ -72,43 +72,12 @@ function createMap ( template ) {
 }
 
 
-/*    function connectMongo(  ) {
-        
-        mongoose.connect( dbURL );
-        var db = mongoose.connection;
-    
-        let precipSchema = new mongoose.Schema({
-            coop: String
-            , station_name: String
-            , country_name: String
-            , utc_offset: String
-            , datetime_utc: Date
-            , lat: Number
-            , lon: Number
-            , precip_amt: Number
-           }, { collection : 'posts'} );
 
-        let posts = mongoose.model('posts', precipSchema); 
-
-        posts.findOne().then(doc => console.log(doc));
-        //return posts;
-
-    } */
-
-// do we need this?
-app.get('/date', function(req, res) {
-
-    var startDateTime = req.query.start;
-    var endDateTime = req.query.end;
-
-    console.log(startDateTime);
-    console.log(endDateTime);
-});
 process.on('SIGINT', function() {
         process.exit();
 });
 
-async function streamDat( dateJSON ) {
+function streamDat( dateJSON ) {
 
     console.log(dateJSON.start);
     console.log(dateJSON.end);
@@ -134,26 +103,26 @@ async function streamDat( dateJSON ) {
     let posts = mongoose.model('posts', precipSchema); 
 
     var iterDate = startDate;
-
     
-    var interval =  setInterval( sendDat, 1000);
+    var interval =  setInterval( sendDat, 2000);
             
-    async function sendDat() {
-                console.log( iterDate );
-                var currDat = await posts.find({datetime_utc : iterDate}) ;
-                console.log( currDat);
-                io.emit("streamData", currDat);
-                // add one hour!
-                iterDate.setTime(iterDate.getTime() + (60*60*1000));
-                if (iterDate == endDate) {
-                    clearInterval( interval );
-                }
-        }
+    function sendDat(  ) {
+
+       posts.find({datetime_utc : iterDate}, function(err, dat) {
+
+           if (err) {
+               return err;
+           } else {
+
+               io.emit("streamData", dat);
+               iterDate.setTime(iterDate.getTime() + (60*60*1000));
+               if (iterDate == endDate) {
+                  clearInterval( interval );
+               }
+           }
+       }); 
+
     }
-
-
-
-
 
 }
 
